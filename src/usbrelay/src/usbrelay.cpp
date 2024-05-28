@@ -5,12 +5,64 @@
 #include <string>
 #include "utils.h"
 
+#include "libusbrelay.h"
+
+std::string board_path;
+relay_board *board = nullptr;
+
+void InitRelay()
+{
+  //
+
+  {
+    int ret = 0;
+
+    ret = enumerate_relay_boards("", 1, 1);
+    std::cout << "---------------------------------" << std::endl;
+  }
+
+  {
+    int cnt = get_relay_board_count();
+    std::cout << "---------------------------------" << std::endl;
+
+    auto boards = get_relay_boards();
+    for (size_t i = 0; i < cnt; i++)
+    {
+      std::cout << "\t path : " << boards[i].path
+                << "\t type : " << (int)(boards[i].module_type)
+                << "\t relay_cnt : " << (int)boards[i].relay_count
+                << "\t serial : " << (char *)&(boards[i].serial)
+                << "\t state : " << (int)boards[i].state << std::endl;
+      if (board_path == boards[i].path)
+      {
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "board %s found ", board_path.c_str());
+        board = &board[i];
+      }
+    }
+    std::cout << "---------------------------------" << std::endl;
+
+    if (!board)
+    {
+      shutdown();
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "relay board %s not found ", board_path.c_str());
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "exit ");
+      rclcpp::shutdown();
+      raise(SIGINT);
+    }
+  }
+}
 
 void HandleGetRelay(const std::shared_ptr<usbrelay_interfaces::srv::GetRelay::Request> request, // CHANGE
                     std::shared_ptr<usbrelay_interfaces::srv::GetRelay::Response> response)     // CHANGE
 {
   request->req;
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "req: %d", request->req);
+
+  uint8_t state = board->state;
+  for (size_t i = 0; i < board->relay_count; i++)
+  {
+    response->input.push_back(GetBit(state, i));
+  }
   // CHANGE
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "sending back response: %s", ToString(response->input).c_str());
 }
@@ -23,6 +75,8 @@ int main(int argc, char **argv)
 
   auto service =                                                                              // CHANGE
       node->create_service<usbrelay_interfaces::srv::GetRelay>("get_relay", &HandleGetRelay); // CHANGE
+
+  InitRelay();
 
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "usbrelay service start !!!"); // CHANGE
 

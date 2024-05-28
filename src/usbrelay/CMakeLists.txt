@@ -15,8 +15,11 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(usbrelay_interfaces REQUIRED)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-add_executable(${PROJECT_NAME} src/usbrelay.cpp)
+add_executable(${PROJECT_NAME} src/usbrelay.cpp  src/libusbrelay.c)
+
+target_link_libraries(${PROJECT_NAME} -lhidapi-hidraw)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

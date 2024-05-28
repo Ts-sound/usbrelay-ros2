@@ -4,7 +4,7 @@ FROM osrf/ros2:devel
 # Install dependencies.
 RUN apt update && apt install -y \
     cmake \
-    gcc \
+    gcc gdb \
     git-core \
     libhidapi-dev \
     usbrelay \
@@ -21,6 +21,9 @@ RUN echo 'root:1' | chpasswd
 # set ssh root permit
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config 
 RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# set ros
+RUN echo "source /opt/ros/rolling/setup.bash" >> ~/.bashrc
 
 # expose 22
 EXPOSE 22
