@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/opt/ros/rolling/include/**",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/install/usbrelay_interfaces/include/**",
+                "${workspaceFolder}/install/usbrelay_interfaces/include/usbrelay_interfaces"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

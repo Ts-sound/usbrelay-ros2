@@ -18,3 +18,5 @@ docker run -d -p 2202:22 -v $(pwd):/root/ros2_ws usbrelay:latest
 
 docker start <id>
 docker attach <id>
+
+echo "source /opt/ros/rolling/setup.bash" >> ~/.bashrc
