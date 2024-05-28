@@ -8,17 +8,17 @@
 #include "libusbrelay.h"
 
 std::string board_path;
-relay_board *board = nullptr;
 
 void InitRelay()
 {
   //
+  relay_board *board = nullptr;
 
   {
     int ret = 0;
 
     ret = enumerate_relay_boards("", 1, 1);
-    std::cout << "---------------------------------" << std::endl;
+    std::cout << "---------------------------------" << ret << std::endl;
   }
 
   {
@@ -26,7 +26,7 @@ void InitRelay()
     std::cout << "---------------------------------" << std::endl;
 
     auto boards = get_relay_boards();
-    for (size_t i = 0; i < cnt; i++)
+    for (int i = 0; i < cnt; i++)
     {
       std::cout << "\t path : " << boards[i].path
                 << "\t type : " << (int)(boards[i].module_type)
@@ -36,12 +36,12 @@ void InitRelay()
       if (board_path == boards[i].path)
       {
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "board %s found ", board_path.c_str());
-        board = &board[i];
+        board = &(boards[i]);
       }
     }
     std::cout << "---------------------------------" << std::endl;
 
-    if (!board)
+    if (board == nullptr)
     {
       shutdown();
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "relay board %s not found ", board_path.c_str());
@@ -58,11 +58,23 @@ void HandleGetRelay(const std::shared_ptr<usbrelay_interfaces::srv::GetRelay::Re
   request->req;
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "req: %d", request->req);
 
-  uint8_t state = board->state;
-  for (size_t i = 0; i < board->relay_count; i++)
+  relay_board *board = nullptr;
+  enumerate_relay_boards("", 1, 0);
+  board = find_board(board_path.c_str(), 0);
+  uint8_t state = 0;
+  if (board)
   {
-    response->input.push_back(GetBit(state, i));
+    state = board->state;
+    for (size_t i = 0; i < board->relay_count; i++)
+    {
+      response->input.push_back(GetBit(state, i));
+    }
   }
+  else
+  {
+    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "board  %s not found", board_path.c_str());
+  }
+
   // CHANGE
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "sending back response: %s", ToString(response->input).c_str());
 }
@@ -72,6 +84,10 @@ int main(int argc, char **argv)
   rclcpp::init(argc, argv);
 
   std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("usbrelay"); // CHANGE
+
+  node->declare_parameter<std::string>("board_path", "/dev/hidraw0");
+  board_path = node->get_parameter("board_path").as_string();
+  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "load params board_path : %s ", board_path.c_str());
 
   auto service =                                                                              // CHANGE
       node->create_service<usbrelay_interfaces::srv::GetRelay>("get_relay", &HandleGetRelay); // CHANGE

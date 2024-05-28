@@ -20,3 +20,11 @@ docker start <id>
 docker attach <id>
 
 echo "source /opt/ros/rolling/setup.bash" >> ~/.bashrc
+
+# run
+
+ros2 run usbrelay usbrelay --ros-args -p board_path:=/dev/hidraw1
+
+
+
+ usbrelay QAAMZ_1=1
